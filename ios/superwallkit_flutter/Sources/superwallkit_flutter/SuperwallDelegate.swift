@@ -503,17 +503,17 @@ final class SuperwallDelegateHost: SuperwallDelegate {
   func handleLog(
     level: String, scope: String, message: String?, info: [String: Any]?, error: (any Error)?
   ) {
-    let transformedInfo = info?.compactMapValues { transformValue($0) }
-
-    flutterDelegate().handleLog(
-      level: level,
-      scope: scope,
-      message: message,
-      info: transformedInfo,
-      error: error?.localizedDescription
-    ) { result in
-      // NO-OP
-    }
+    // Intentionally do not forward log events to Flutter.
+    //
+    // RevenueCat's Logger emits from background threads (e.g. the
+    // CustomerInfoStream that Superwall hooks into). If a log fires while the
+    // FlutterEngine is not running — during early launch, teardown after
+    // Superwall.shared.reset(), or hot restart — sendOnChannel: hits an
+    // NSAssert in FlutterEngine.mm and crashes the app with
+    // NSInternalInconsistencyException ("Sending a message before the
+    // FlutterEngine has been run"). The Dart-side handleLog is a no-op anyway,
+    // so dropping the bridge call here is functionally equivalent and removes
+    // the race.
   }
 
   func willRedeemLink() {
